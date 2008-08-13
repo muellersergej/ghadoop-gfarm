@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Bundle-NativeCode: libGfarmFSNative.so; osname=Linux; processor=amd64-64
+
