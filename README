@@ -16,10 +16,10 @@ Please read the documents on Hadoop site (http://hadoop.apache.org/core/).
 3. Installing Hadoop-Gfarm
 
 3.1 Building Hadoop-Gfarm
-To build Hadoop-Gfarm, edit JAVA_HOME in Makefile and type the following
-commands.
+To build Hadoop-Gfarm, edit JAVA_HOME and HADOOP_HOME in build.sh and type
+the following commands.
 
-$ make
+$ ./build.sh
 
 3.2 Configuring Hadoop
 Now hadoop-gfarm.jar and libGfarmFSNative.so is created. Next, copy these
@@ -28,7 +28,7 @@ files to Hadoop's appropriate directory.
 $ cp hadoop-gfarm.jar ${HADOOP_HOME}/lib
 $ cp libGfarmFSNative.so  ${HADOOP_HOME}/lib/native/Linux-amd64-64/lib
 
-Next, please add these configuration to the hadoop-site.xml.
+Finally, please add this configuration to the hadoop-site.xml.
 
   <property>
     <name>fs.gfarmfs.impl</name>

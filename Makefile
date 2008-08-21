@@ -1,6 +1,4 @@
 # Java
-JAVA_HOME=/usr/lib/jvm/java-6-sun/
-CLASSPATH=.:./lib/hadoop-0.17.1/hadoop-0.17.1-core.jar:./lib/hadoop-0.17.1/lib/commons-logging-1.0.4.jar:./lib/hadoop-0.17.1/lib/commons-logging-api-1.0.4.jar:./lib/hadoop-0.17.1/lib/log4j-1.2.13.jar
 JAVA_SOURCES = \
 	org/apache/hadoop/fs/gfarmfs/GfarmFileSystem.java \
 	org/apache/hadoop/fs/gfarmfs/GfarmFSOutputStream.java \
