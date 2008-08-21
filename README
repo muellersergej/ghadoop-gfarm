@@ -1,0 +1,47 @@
+Introduction
+============
+
+You can use Hadoop, an open-source MapReduce framework, on Gfarm with this
+Hadoop-Gfarm plugin.
+
+Install
+=======
+
+1. Installing Gfarm
+Please read INSTALL.en or INSTALL.ja contained in Gfarm package.
+
+2. Installing Hadoop
+Please read the documents on Hadoop site (http://hadoop.apache.org/core/).
+
+3. Installing Hadoop-Gfarm
+
+3.1 Building Hadoop-Gfarm
+To build Hadoop-Gfarm, edit JAVA_HOME in Makefile and type the following
+commands.
+
+$ make
+
+3.2 Configuring Hadoop
+Now hadoop-gfarm.jar and libGfarmFSNative.so is created. Next, copy these
+files to Hadoop's appropriate directory.
+
+$ cp hadoop-gfarm.jar ${HADOOP_HOME}/lib
+$ cp libGfarmFSNative.so  ${HADOOP_HOME}/lib/native/Linux-amd64-64/lib
+
+Next, please add these configuration to the hadoop-site.xml.
+
+  <property>
+    <name>fs.gfarmfs.impl</name>
+    <value>org.apache.hadoop.fs.gfarmfs.GfarmFileSystem</value>
+    <description>The FileSystem for gfarm: uris.</description>
+  </property>
+
+3.3 Access Gfarm through Hadoop
+If installation is done, you can access Gfarm's root directory through Hadoop
+like following.
+
+$ ${HADOOP_HOME}/bin/hadoop dfs -ls gfarmfs:///
+
+Or you can run sample MapReduce programs like this.
+
+$ ${HADOOP_HOME}/bin/hadoop jar hadoop-${VERSION}-examples.jar wordcount gfarmfs:///input gfarmfs:///output;
