@@ -245,6 +245,36 @@ err_not_found:
   return NULL;
 }
 
+JNIEXPORT jobjectArray JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_getDataLocation
+(JNIEnv *env, jclass cls, jstring jstrpath, jlong start, jlong len)
+{
+  string path = jstr2cppstr(env, jstrpath);
+
+  gfarm_error_t e;
+  int n;
+  char **hosts;
+  jclass jstrClass = env->FindClass("Ljava/lang/String;");
+  jstring s;
+
+  e = gfs_replica_list_by_name(path.c_str(), &n, &hosts);
+
+  jobjectArray jentries = env->NewObjectArray(n, jstrClass, NULL);
+
+  if (e == GFARM_ERR_NO_ERROR) {
+    for (int i = 0; i < n; i++) {
+      s = env->NewStringUTF(hosts[i]);
+      env->SetObjectArrayElement(jentries, i, s);
+      env->DeleteLocalRef(s);
+    }
+  }
+
+  for (int i = 0; i < n; ++i)
+    free(hosts[i]);
+  free(hosts);
+
+  return jentries;
+}
+
 //-----------------------------------------------------------------------------
 // class GfarmFSNativeOutputChannel
 //

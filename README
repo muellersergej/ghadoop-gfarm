@@ -44,4 +44,4 @@ $ ${HADOOP_HOME}/bin/hadoop dfs -ls gfarmfs:///
 
 Or you can run sample MapReduce programs like this.
 
-$ ${HADOOP_HOME}/bin/hadoop jar hadoop-${VERSION}-examples.jar wordcount gfarmfs:///input gfarmfs:///output;
+$ ${HADOOP_HOME}/bin/hadoop jar hadoop-${VERSION}-examples.jar wordcount gfarmfs://null/input gfarmfs://null/output;

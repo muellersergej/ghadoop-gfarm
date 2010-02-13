@@ -36,6 +36,7 @@ class GfarmFSNative {
     public final static native long getModificationTime(String path);
     public final static native long getReplication(String path);
     public final static native String[] readdir(String path);
+    public final static native String[] getDataLocation(String path, long start, long len);
 
     public GfarmFSNative() throws IOException {
     }

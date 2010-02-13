@@ -97,6 +97,11 @@ public class GfarmFileSystem extends FileSystem {
         return new FSDataOutputStream(new GfarmFSOutputStream(srep), statistics);
     }
 
+    public FSDataOutputStream append(Path f, int bufferSize,
+				     Progressable progress) throws IOException {
+	throw new IOException("Not supported");
+    }
+
     public boolean rename(Path src, Path dst) throws IOException {
         Path absoluteS = makeAbsolute(src);
         String srepS = absoluteS.toUri().getPath();
@@ -214,10 +219,16 @@ public class GfarmFileSystem extends FileSystem {
 
     public BlockLocation[] getFileBlockLocations(FileStatus file, long start,
                                                  long len) throws IOException {
-        // TODO: This is an ad-hoc implementation
-        String[] name = { "localhost:50010" };
-        String[] host = { "localhost" };
-        return new BlockLocation[] { new BlockLocation(name, host, 0, len) };
+
+	if(file == null) {
+	    return null;
+	}
+      
+	String srep = makeAbsolute(file.getPath()).toUri().getPath();
+	long blockSize = getDefaultBlockSize();
+	String[] hints = gfsImpl.getDataLocation(srep, start, len);
+
+	return new BlockLocation[] { new BlockLocation(null, hints, 0, len) };
     }
 
 }
