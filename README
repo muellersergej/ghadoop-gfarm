@@ -16,22 +16,21 @@ Please read the documents on Hadoop site (http://hadoop.apache.org/core/).
 3. Installing Hadoop-Gfarm
 
 3.1 Building Hadoop-Gfarm
-To build Hadoop-Gfarm, edit JAVA_HOME and HADOOP_HOME in build.sh and type
+To build Hadoop-Gfarm, edit JAVA_HOME, HADOOP_HOME and GFARM_HOME in build.sh and type
 the following commands.
 
 $ ./build.sh
 
 3.2 Configuring Hadoop
-Now hadoop-gfarm.jar and libGfarmFSNative.so is created. Next, copy these
-files to Hadoop's appropriate directory.
+Now hadoop-gfarm.jar and libGfarmFSNative.so is created and copied to Hadoop's library directory.
+hadoop-gfarm.jar is copied to ${HADOOP_HOME}/lib
+libGfarmFSNative.so is copied to ${HADOOP_HOME}/lib/native/Linux-amd64-64 and 
+${HADOOP_HOME}/lib/native/Linux-i386-32
 
-$ cp hadoop-gfarm.jar ${HADOOP_HOME}/lib
-$ cp libGfarmFSNative.so  ${HADOOP_HOME}/lib/native/Linux-amd64-64/lib
-
-Finally, please add this configuration to the hadoop-site.xml.
+Finally, please add this configuration to the core-site.xml.
 
   <property>
-    <name>fs.gfarmfs.impl</name>
+    <name>fs.gfarm.impl</name>
     <value>org.apache.hadoop.fs.gfarmfs.GfarmFileSystem</value>
     <description>The FileSystem for gfarm: uris.</description>
   </property>
@@ -40,8 +39,17 @@ Finally, please add this configuration to the hadoop-site.xml.
 If installation is done, you can access Gfarm's root directory through Hadoop
 like following.
 
-$ ${HADOOP_HOME}/bin/hadoop dfs -ls gfarmfs:///
+$ ${HADOOP_HOME}/bin/hadoop dfs -ls gfarm:///
 
 Or you can run sample MapReduce programs like this.
 
-$ ${HADOOP_HOME}/bin/hadoop jar hadoop-${VERSION}-examples.jar wordcount gfarmfs://null/input gfarmfs://null/output;
+$ ${HADOOP_HOME}/bin/hadoop jar hadoop-${VERSION}-examples.jar wordcount gfarm:///input gfarm:///output
+
+3.4 Cofiguring Hadoop-Gfarm
+You can configure your working directory by the following property in core-site.xml.
+
+  <property>
+    <name>fs.gfarm.workingDir</name>
+    <value>/home/${user.name}</value>
+    <description>The working directory on gfarm file system.</description>
+  </property>

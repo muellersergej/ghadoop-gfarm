@@ -131,10 +131,6 @@ JNIEXPORT jboolean JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_isFil
   return r;  
 
 err:
-  if(e == GFARM_ERR_NO_SUCH_FILE_OR_DIRECTORY)
-    throw_file_not_found_exception(env, gfarm_error_string(e), path);
-  else
-    throw_io_exception(env, gfarm_error_string(e));
   return JNI_FALSE;
 }
 
@@ -338,6 +334,21 @@ err:
 }
 
 JNIEXPORT jint JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNativeOutputChannel_flush
+  (JNIEnv *env, jclass cls, jlong jptr)
+{
+  gfarm_error_t e;
+  GFS_File f = (GFS_File)jptr;
+  if(f == NULL) return 0;
+  e = gfs_pio_flush(f);
+  if(e != GFARM_ERR_NO_ERROR) goto err;
+  return 0;
+
+err:
+  throw_io_exception(env, gfarm_error_string(e));
+  return -1;
+}
+
+JNIEXPORT jint JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNativeOutputChannel_sync
   (JNIEnv *env, jclass cls, jlong jptr)
 {
   gfarm_error_t e;

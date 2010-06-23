@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 # Please set these variables
-export JAVA_HOME=/usr/lib/jvm/java-6-sun/
-export HADOOP_HOME=/home/kzk/hadoop-gfarm/lib/hadoop-0.17.1/
+export JAVA_HOME=/usr/local/jdk
+export HADOOP_HOME=/home/mikami/hadoop/hadoop-0.20.2
+export GFARM_HOME=/data/local/gfarm_v2
 
 # Include jar files
 export CLASSPATH=${CLASSPATH}
@@ -17,3 +18,7 @@ for f in $HADOOP_HOME/lib/jetty-ext/*.jar; do
 done
 
 make
+
+cp hadoop-gfarm.jar ${HADOOP_HOME}/lib/
+cp libGfarmFSNative.so ${HADOOP_HOME}/lib/native/Linux-amd64-64/
+cp libGfarmFSNative.so ${HADOOP_HOME}/lib/native/Linux-i386-32/

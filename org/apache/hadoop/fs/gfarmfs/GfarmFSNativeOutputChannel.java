@@ -13,6 +13,7 @@ public class GfarmFSNativeOutputChannel implements WritableByteChannel {
     private final static native int close(long cPtr);
     private final static native int write(long cPtr, ByteBuffer buf, int begin, int end);
     private final static native int flush(long cPtr);
+    private final static native int sync(long cPtr);
     private final static native int seek(long cPtr, long offset);
     private final static native long tell(long cPtr);
 
@@ -96,6 +97,18 @@ public class GfarmFSNativeOutputChannel implements WritableByteChannel {
         return flush(cPtr);
     }
 
+    public int sync() throws IOException
+    {
+	if (cPtr == 0)
+	    throw new IOException("File closed");
+	
+	// flush everything
+	writeBuffer.flip();
+	writeDirect(writeBuffer);
+	
+	return sync(cPtr);
+    }
+
     public int seek(long offset) throws IOException
     {
         if (cPtr == 0)
@@ -108,15 +121,17 @@ public class GfarmFSNativeOutputChannel implements WritableByteChannel {
     {
         if (cPtr == 0)
             throw new IOException("File closed");
-        return tell(cPtr);
+        return tell(cPtr) + writeBuffer.remaining();
     }
 
     public void close() throws IOException
     {
         if (cPtr != 0) {
+	    flush();
             close(cPtr);
             cPtr = 0;
         }
+
         return;
     }
 

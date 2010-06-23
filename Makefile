@@ -21,7 +21,7 @@ hadoop-gfarm.jar: libGfarmFSNative.so
 	jar cmf manifest.cf hadoop-gfarm.jar org/apache/hadoop/fs/gfarmfs/*.class libGfarmFSNative.so
 
 libGfarmFSNative.so: org_apache_hadoop_fs_gfarmfs_GfarmFSNative.h GfarmFSNative.cpp
-	g++ ${CXXFLAGS} -shared -fPIC GfarmFSNative.cpp -o libGfarmFSNative.so ${LDFLAGS}
+	g++ ${CXXFLAGS} -shared -fPIC GfarmFSNative.cpp -o libGfarmFSNative.so ${LDFLAGS} -L ${GFARM_HOME}/lib
 
 org_apache_hadoop_fs_gfarmfs_GfarmFSNative.h: ${JAVA_SOURCES}
 	javac -g -Xlint:deprecation -classpath ${CLASSPATH} ${JAVA_SOURCES}

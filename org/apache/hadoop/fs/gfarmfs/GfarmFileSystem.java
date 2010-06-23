@@ -23,7 +23,7 @@ public class GfarmFileSystem extends FileSystem {
     private GfarmFSNative gfsImpl = null;
     private FileSystem localFs;
     private URI uri;
-    private Path workingDir = new Path("/");
+    private Path workingDir;
    
     public GfarmFileSystem() {
     }
@@ -33,12 +33,35 @@ public class GfarmFileSystem extends FileSystem {
             if (gfsImpl == null)
                 gfsImpl = new GfarmFSNative();
             this.localFs = FileSystem.getLocal(conf);
-            this.uri = URI.create(uri.getScheme() + "://" + uri.getAuthority());
+            this.uri = URI.create(uri.getScheme() + "://" + "null");
+	    String[] workingDirStr = getConf().getStrings("fs.gfarm.workingDir","/home/" + System.getProperty("user.name"));
+	    this.workingDir = 
+		new Path(workingDirStr[0]).makeQualified(this);
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Unable to initialize KFS");
+            System.out.println("Unable to initialize Gfarm file system");
             System.exit(-1);
         }
+    }
+
+    public void checkPath(Path path) {
+	URI thisUri = this.getUri();
+	URI thatUri = path.toUri();
+	String thatAuthority = thatUri.getAuthority();
+	if (thatUri.getScheme() != null
+	    && thatUri.getScheme().equalsIgnoreCase(thisUri.getScheme()))
+	    return;
+	super.checkPath(path);
+    }
+
+    public Path makeQualified(Path path) {
+	URI thisUri = this.getUri();
+	URI thatUri = path.toUri();
+        if (thatUri.getScheme() != null
+            && thatUri.getScheme().equalsIgnoreCase(thisUri.getScheme()))
+	    path = new Path(thisUri.getScheme(), null,
+			    thatUri.getPath());
+	return super.makeQualified(path);
     }
 
     public URI getUri() {
@@ -128,6 +151,8 @@ public class GfarmFileSystem extends FileSystem {
         int e;
         Path absolute = makeAbsolute(path);
         String srep = absolute.toUri().getPath();
+        if (!exists(path))
+            return false;
         if (gfsImpl.isFile(srep)){
             e = gfsImpl.remove(srep);
             if (e != 0)
@@ -153,8 +178,13 @@ public class GfarmFileSystem extends FileSystem {
         String srep = absolute.toUri().getPath();
         if (gfsImpl.isFile(srep))
             return new FileStatus[] { getFileStatus(path) } ;
+	String[] entries = null;
+	try {
+	    entries = gfsImpl.readdir(srep);
+	} catch ( Exception e) {
+	    return null;
+	}
 
-        String[] entries = gfsImpl.readdir(srep);
         if (entries == null)
             return null;
 

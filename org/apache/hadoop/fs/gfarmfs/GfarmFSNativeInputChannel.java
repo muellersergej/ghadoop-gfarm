@@ -85,13 +85,17 @@ public class GfarmFSNativeInputChannel implements ReadableByteChannel {
     public int seek(long offset) throws IOException {
         if (cPtr == 0)
             throw new IOException("File closed");
+	
+	readBuffer.clear();
+	readBuffer.flip();
+
         return seek(cPtr, offset);
     }
 
     public long tell() throws IOException {
         if (cPtr == 0)
             throw new IOException("File closed");
-        return tell(cPtr);
+        return tell(cPtr) - readBuffer.remaining();
     }
 
     public void close() throws IOException {
