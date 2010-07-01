@@ -4,6 +4,7 @@
 export JAVA_HOME=/usr/local/jdk
 export HADOOP_HOME=/home/mikami/hadoop/hadoop-0.20.2
 export GFARM_HOME=/data/local/gfarm_v2
+export CPLUS_INCLUDE_PATH=${GFARM_HOME}/include
 
 # Include jar files
 export CLASSPATH=${CLASSPATH}
