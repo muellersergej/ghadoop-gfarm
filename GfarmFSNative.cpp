@@ -395,12 +395,57 @@ err:
 //-----------------------------------------------------------------------------
 // class GfarmFSNativeInputChannel
 //
+int replicasOnSite(char * host, const char *path, JNIEnv *env) {
+	int n;
+	char **hosts;
+	int found = 0;
+	gfarm_error_t e = gfs_replica_list_by_name(path, &n, &hosts);
+	if (e == GFARM_ERR_NO_ERROR) {
+		for (int i = 0; i < n; i++) {
+			printf("Found local host %s", hosts[i]); 
+			int cmp = strcmp(hosts[i], host);
+			if (cmp == 0) {
+				found++;			
+			}
+		}
+		return found;
+	} 
+	else {
+		throw_io_exception(env, gfarm_error_string(e));
+	}
+	return 0;	
+}
+
 JNIEXPORT jlong JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNativeInputChannel_open
   (JNIEnv *env, jclass cls, jstring jstrpath)
 {
-  string path = jstr2cppstr(env, jstrpath);
-  GFS_File f = NULL;
-  gfarm_error_t e = gfs_pio_open(path.c_str(), GFARM_FILE_RDONLY, &f);
+  	string path = jstr2cppstr(env, jstrpath);
+  	GFS_File f = NULL;
+	gfarm_error_t e;
+
+  // check if path is a file (we replicate only files)
+  char * thisHost = "GH2-A00-00";
+  struct gfs_stat s;
+  e = gfs_stat(path.c_str(), &s);
+  if(e != GFARM_ERR_NO_ERROR)
+    goto err;
+
+  if(GFARM_S_ISREG(s.st_mode)) {
+	// ok path is a file	 
+	if (replicasOnSite(thisHost, path.c_str(), env) < 1) {
+		e = gfs_replicate_to(const_cast<char *>(path.c_str()), thisHost, 600);
+		if(e != GFARM_ERR_NO_ERROR)
+		    goto err;		
+	}
+  
+    // wait until replica is ready  
+	while (replicasOnSite(thisHost, path.c_str(), env) < 1) {
+		sleep(5);
+	}
+  }
+
+  gfs_stat_free(&s);
+  e = gfs_pio_open(path.c_str(), GFARM_FILE_RDONLY, &f);
   if(e != GFARM_ERR_NO_ERROR)
     goto err;
   return (jlong)f;
