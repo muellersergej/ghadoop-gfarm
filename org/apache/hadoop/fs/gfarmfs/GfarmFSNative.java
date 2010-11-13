@@ -26,7 +26,7 @@ class GfarmFSNative {
     private final static native int terminate();
     public final static native String getErrorString(int e);
 
-    public final static native int mkdir(String path);
+    public final static native int mkdir(String path, short permission);
     public final static native int rmdir(String path);
     public final static native int rename(String src, String dst);
     public final static native int remove(String path);
@@ -37,6 +37,10 @@ class GfarmFSNative {
     public final static native long getReplication(String path);
     public final static native String[] readdir(String path);
     public final static native String[] getDataLocation(String path, long start, long len);
+	public final static native String getOwner(String path);
+	public final static native String getGroup(String path);
+	public final static native short getPermission(String path);
+	public final static native int setPermission(String path, short permission);
 
     public GfarmFSNative() throws IOException {
     }

@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
 # Please set these variables
-export JAVA_HOME=/usr/local/jdk
-export HADOOP_HOME=/home/mikami/hadoop/hadoop-0.20.2
-export GFARM_HOME=/data/local/gfarm_v2
+export JAVA_HOME=/usr/java/default
+export HADOOP_HOME=/ghadoop/hadoop/
+export GFARM_HOME=/root/install/gfarm/gfarm_v2
+
 export CPLUS_INCLUDE_PATH=${GFARM_HOME}/include
 
 # Include jar files
 export CLASSPATH=${CLASSPATH}
-for f in $HADOOP_HOME/hadoop-*-core.jar; do
+for f in $HADOOP_HOME/hadoop-*.jar; do
   CLASSPATH=${CLASSPATH}:$f;
 done
 for f in $HADOOP_HOME/lib/*.jar; do

@@ -213,7 +213,6 @@ public class GfarmFileSystem extends FileSystem {
         throws IOException {
         Path absolute = makeAbsolute(path);
         String srep = absolute.toUri().getPath();
-        // TODO: permission
         String[] dirs = srep.split("/");
         if(dirs.length > 0){
             String dir = "";
@@ -222,7 +221,7 @@ public class GfarmFileSystem extends FileSystem {
                 dir += dirs[i];
                 System.out.println("dir = " + dir);
                 //System.out.println("dir = " + dirs[i]);
-                int e = gfsImpl.mkdir(dir);
+                int e = gfsImpl.mkdir(dir, permission.toShort());
                 if (e != 0)
                     throw new IOException(gfsImpl.getErrorString(e));
                 dir += "/";
@@ -235,7 +234,10 @@ public class GfarmFileSystem extends FileSystem {
         Path absolute = makeAbsolute(path);
         String srep = absolute.toUri().getPath();
         if (gfsImpl.isDirectory(srep)) {
-            return new FileStatus(0, true, 1, 0, gfsImpl.getModificationTime(srep),
+            return new FileStatus(0, true, 1, 0, gfsImpl.getModificationTime(srep), 0,
+								  new FsPermission(gfsImpl.getPermission(srep)),
+								  gfsImpl.getOwner(srep),
+								  gfsImpl.getGroup(srep),
                                   path.makeQualified(this));
         } else {
             return new FileStatus(gfsImpl.getFileSize(srep),
@@ -243,9 +245,19 @@ public class GfarmFileSystem extends FileSystem {
                                   (int)gfsImpl.getReplication(srep),
                                   getDefaultBlockSize(),
                                   gfsImpl.getModificationTime(srep),
+								  0,
+								  new FsPermission(gfsImpl.getPermission(srep)),
+								  gfsImpl.getOwner(srep),
+								  gfsImpl.getGroup(srep),								  
                                   path.makeQualified(this));
         }
     }
+	
+	public void setPermission(Path path, FsPermission permission) throws IOException {
+        Path absolute = makeAbsolute(path);
+        String srep = absolute.toUri().getPath();
+		gfsImpl.setPermission(srep, permission.toShort());
+	}	
 
     public BlockLocation[] getFileBlockLocations(FileStatus file, long start,
                                                  long len) throws IOException {
