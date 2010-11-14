@@ -41,6 +41,7 @@ class GfarmFSNative {
 	public final static native String getGroup(String path);
 	public final static native short getPermission(String path);
 	public final static native int setPermission(String path, short permission);
+	public final static native int replicateTo(String path, String destinationHost);
 
     public GfarmFSNative() throws IOException {
     }

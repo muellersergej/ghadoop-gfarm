@@ -2,6 +2,9 @@ package org.apache.hadoop.fs.gfarmfs;
 
 import java.io.*;
 import java.net.*;
+import java.util.*;
+import java.security.SecureRandom;
+import java.security.NoSuchAlgorithmException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -35,8 +38,8 @@ public class GfarmFileSystem extends FileSystem {
             this.localFs = FileSystem.getLocal(conf);
             this.uri = URI.create(uri.getScheme() + "://" + "null");
 	    String[] workingDirStr = getConf().getStrings("fs.gfarm.workingDir","/home/" + System.getProperty("user.name"));
-	    this.workingDir = 
-		new Path(workingDirStr[0]).makeQualified(this);
+
+	    this.workingDir = new Path(workingDirStr[0]).makeQualified(this);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Unable to initialize Gfarm file system");
@@ -81,15 +84,72 @@ public class GfarmFileSystem extends FileSystem {
     public Path getWorkingDirectory() {
         return workingDir;
     }
+    
+    private void replicateAndWait(Path path) {
+    	System.out.println("Checking " + path.toString() + " for replication.");
+    	String[] hostArray = getConf().getStrings("fs.gfarm.replication.destinations");
+    	
+    	if (hostArray != null && hostArray.length > 0) {
+			// check if replication is necessary
+			List<String> destinationsHosts = new ArrayList(Arrays.asList(hostArray));
+			Path absolute = makeAbsolute(path);
+        	String srep = absolute.toUri().getPath();
+			
+			Set<String> replicaHosts = new HashSet<String>(Arrays.asList(gfsImpl.getDataLocation(srep, 0, 0))); // start, len do not matter in gfarm
+			replicaHosts.retainAll(destinationsHosts);
+			if (replicaHosts.size() > 0) {
+				// no replication needed. proceed.
+				System.out.println("Replication not required for " +srep);
+				return;
+			} else {
+				// replication to a local site is required. replicate to a random local node.
+				
+				int destIndex;
+				try {
+					SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+					destIndex = random.nextInt(destinationsHosts.size());
+				} catch ( NoSuchAlgorithmException e ) {
+	        		destIndex = 0;
+	    		}
+	    		long filesize = gfsImpl.getFileSize(srep);
+				System.out.println("Replicating " +srep + " to "+ destinationsHosts.get(destIndex));
+				long stime = System.nanoTime();
+				gfsImpl.replicateTo(srep, destinationsHosts.get(destIndex));
+				long deltatime = System.nanoTime() - stime;
+				System.out.println(String.format("Replication took %f ms for %f Kbytes", (double) deltatime / 1000000.0f,  (double)filesize / 1024.0f));
+						
+				// wait until replication finishes
+				//boolean replicationFinished = false;
+				//while (!replicationFinished) {
+				//	replicaHosts = new HashSet<String>(Arrays.asList(gfsImpl.getDataLocation(srep, 0, 0))); // start, len do not matter in gfarm
+				//	replicaHosts.retainAll(destinationsHosts);
+				//	replicationFinished = replicaHosts.size() > 0;
+				//	try {
+				//		System.out.println("Waiting for replication of " +srep);
+				//		java.lang.Thread.sleep(50);
+				//	} 
+				//	catch ( InterruptedException e) {
+				//		// ignore	
+				//	}
+				//}
+				//System.out.println("Local replica for " + srep + " found on " + replicaHosts.toArray()[0].toString());
+			}
+		}
+	}
 
     public FSDataInputStream open(Path path, int bufferSize)
         throws IOException {
         if (!exists(path))
             throw new IOException("File does not exist: " + path);
-
-        Path absolute = makeAbsolute(path);
+        
+        // replicate to local site if desired
+        boolean replicationDesired = getConf().getBoolean("fs.gfarm.replication.enabled", false);
+        System.out.println("Replication is " + (replicationDesired ? "enabled." : "disabled."));
+		if (replicationDesired) {
+			replicateAndWait(path);
+		}
+		Path absolute = makeAbsolute(path);
         String srep = absolute.toUri().getPath();
-
         // TODO: bufferSize
         return new FSDataInputStream(new GfarmFSInputStream(gfsImpl, srep, statistics));
     }
@@ -219,7 +279,7 @@ public class GfarmFileSystem extends FileSystem {
             for (int i = 0; i < dirs.length; i++) {
                 if (dirs[i].equals("")) continue;
                 dir += dirs[i];
-                System.out.println("dir = " + dir);
+                System.out.println("mkdir = " + dir);
                 //System.out.println("dir = " + dirs[i]);
                 int e = gfsImpl.mkdir(dir, permission.toShort());
                 if (e != 0)

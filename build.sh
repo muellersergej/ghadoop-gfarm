@@ -5,7 +5,7 @@ export JAVA_HOME=/usr/java/default
 export HADOOP_HOME=/ghadoop/hadoop/
 export GFARM_HOME=/root/install/gfarm/gfarm_v2
 
-export CPLUS_INCLUDE_PATH=${GFARM_HOME}/include
+export CPLUS_INCLUDE_PATH=${GFARM_HOME}/include:${GFARM_HOME}/lib/libgfarm/gfarm
 
 # Include jar files
 export CLASSPATH=${CLASSPATH}
