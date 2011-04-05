@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
 # Please set these variables
-export JAVA_HOME=/usr/local/jdk
-export HADOOP_HOME=/home/mikami/hadoop/hadoop-0.20.2
-export GFARM_HOME=/data/local/gfarm_v2
-export CPLUS_INCLUDE_PATH=${GFARM_HOME}/include
+export JAVA_HOME=/usr/java/default
+export HADOOP_HOME=/ghadoop/hadoop/
+export GFARM_HOME=/root/install/gfarm/gfarm_v2
+
+export CPLUS_INCLUDE_PATH=${GFARM_HOME}/include:${GFARM_HOME}/lib/libgfarm/gfarm
 
 # Include jar files
 export CLASSPATH=${CLASSPATH}

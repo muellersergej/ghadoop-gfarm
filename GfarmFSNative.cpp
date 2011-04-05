@@ -4,10 +4,14 @@
 
 #include <gfarm/gfarm.h>
 
+
 #include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
+
+
+
 using namespace std;
 
 //-----------------------------------------------------------------------------
@@ -60,10 +64,10 @@ JNIEXPORT jstring JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_getErr
 }
 
 JNIEXPORT jint JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_mkdir
-  (JNIEnv *env, jclass cls, jstring jstrpath)
+  (JNIEnv *env, jclass cls, jstring jstrpath, jshort permission)
 {
   string path = jstr2cppstr(env, jstrpath);
-  gfarm_error_t e = gfs_mkdir(path.c_str(), 0755);
+  gfarm_error_t e = gfs_mkdir(path.c_str(), permission);
   if(e != GFARM_ERR_NO_ERROR && e != GFARM_ERR_ALREADY_EXISTS)
     goto err;
   return 0;
@@ -271,6 +275,119 @@ JNIEXPORT jobjectArray JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_g
   return jentries;
 }
 
+JNIEXPORT jstring JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_getOwner
+(JNIEnv *env, jclass cls, jstring jstrpath)
+{
+	jstring owner;
+	string path = jstr2cppstr(env, jstrpath);
+	
+	struct gfs_stat s;
+	gfarm_error_t e = gfs_stat(path.c_str(), &s);
+	if(e != GFARM_ERR_NO_ERROR)
+		goto err;
+	owner = env->NewStringUTF(s.st_user);
+	gfs_stat_free(&s);
+	return owner;
+	
+err:
+	if(e == GFARM_ERR_NO_SUCH_FILE_OR_DIRECTORY)
+		throw_file_not_found_exception(env, gfarm_error_string(e), path);
+	else
+		throw_io_exception(env, gfarm_error_string(e));
+	return NULL;	
+}
+
+JNIEXPORT jstring JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_getGroup
+(JNIEnv *env, jclass cls, jstring jstrpath)
+{
+	jstring group;
+	string path = jstr2cppstr(env, jstrpath);
+	
+	struct gfs_stat s;
+	gfarm_error_t e = gfs_stat(path.c_str(), &s);
+	if(e != GFARM_ERR_NO_ERROR)
+		goto err;
+	group = env->NewStringUTF(s.st_group);
+	gfs_stat_free(&s);
+	return group;
+	
+err:
+	if(e == GFARM_ERR_NO_SUCH_FILE_OR_DIRECTORY)
+		throw_file_not_found_exception(env, gfarm_error_string(e), path);
+	else
+		throw_io_exception(env, gfarm_error_string(e));
+	return NULL;	
+}
+
+JNIEXPORT jshort JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_getPermission
+(JNIEnv * env, jclass cls, jstring jstrpath)
+{
+	jlong r;
+	string path = jstr2cppstr(env, jstrpath);
+	
+	struct gfs_stat s;
+	gfarm_error_t e = gfs_stat(path.c_str(), &s);
+	if(e != GFARM_ERR_NO_ERROR)
+		goto err;
+	r = s.st_mode;
+	gfs_stat_free(&s);
+	return r;
+	
+err:
+	if(e == GFARM_ERR_NO_SUCH_FILE_OR_DIRECTORY)
+		throw_file_not_found_exception(env, gfarm_error_string(e), path);
+	else
+		throw_io_exception(env, gfarm_error_string(e));
+	return 0;	
+}
+
+JNIEXPORT jint JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_setPermission
+(JNIEnv *env, jclass cls, jstring jstrpath, jshort permission)
+{
+	string path = jstr2cppstr(env, jstrpath);	
+
+	gfarm_error_t e = gfs_chmod(path.c_str(), (gfarm_mode_t)permission);
+	if(e != GFARM_ERR_NO_ERROR)
+		goto err;
+	return 0;
+	
+err:
+	if(e == GFARM_ERR_NO_SUCH_FILE_OR_DIRECTORY)
+		throw_file_not_found_exception(env, gfarm_error_string(e), path);
+	else
+		throw_io_exception(env, gfarm_error_string(e));
+	return -1;		
+}
+
+JNIEXPORT jint JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNative_replicateTo
+(JNIEnv * env, jclass cls, jstring jstrpath, jstring jstrdestination) 
+{	
+	string path = jstr2cppstr(env, jstrpath);
+	string dest = jstr2cppstr(env, jstrdestination);
+	
+	//struct gfm_connection *gfm_server = NULL;
+	//gfarm_error_t e = gfm_client_connection_and_process_acquire_by_path(path.c_str(), &gfm_server);
+	//if(e != GFARM_ERR_NO_ERROR)
+	//	goto err;
+		
+	//struct gfarm_host_info destInfo;
+	//e = gfm_host_info_get_by_name_alias(gfm_server, dest.c_str(), &destInfo);
+	//if(e != GFARM_ERR_NO_ERROR) {
+	//	gfm_name_success_op_connection_free(gfm_server, NULL);
+	//	goto err;
+	//}
+		
+	//gfm_name_success_op_connection_free(gfm_server, NULL);	
+	return gfs_replicate_to(const_cast<char *>(path.c_str()), const_cast<char *>(dest.c_str()), 600);// destInfo.port);
+	
+//err:	
+//	if(e == GFARM_ERR_NO_SUCH_FILE_OR_DIRECTORY)
+//		throw_file_not_found_exception(env, gfarm_error_string(e), path);
+//	else
+//		throw_io_exception(env, gfarm_error_string(e));
+//	return -1;	
+}	
+
 //-----------------------------------------------------------------------------
 // class GfarmFSNativeOutputChannel
 //
@@ -425,7 +542,9 @@ JNIEXPORT jlong JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNativeInputChan
 
   // check if path is a file (we replicate only files)
   char * thisHost = "GH2-A00-00";
-  struct gfs_stat s;
+	
+  /*
+  struct gfs_stat s;  
   e = gfs_stat(path.c_str(), &s);
   if(e != GFARM_ERR_NO_ERROR)
     goto err;
@@ -442,9 +561,10 @@ JNIEXPORT jlong JNICALL Java_org_apache_hadoop_fs_gfarmfs_GfarmFSNativeInputChan
 	while (replicasOnSite(thisHost, path.c_str(), env) < 1) {
 		sleep(5);
 	}
-  }
+  } 
 
   gfs_stat_free(&s);
+  */
   e = gfs_pio_open(path.c_str(), GFARM_FILE_RDONLY, &f);
   if(e != GFARM_ERR_NO_ERROR)
     goto err;
