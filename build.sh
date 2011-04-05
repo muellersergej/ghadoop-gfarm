@@ -8,7 +8,7 @@ export CPLUS_INCLUDE_PATH=${GFARM_HOME}/include
 
 # Include jar files
 export CLASSPATH=${CLASSPATH}
-for f in $HADOOP_HOME/hadoop-*-core.jar; do
+for f in $HADOOP_HOME/hadoop-*.jar; do
   CLASSPATH=${CLASSPATH}:$f;
 done
 for f in $HADOOP_HOME/lib/*.jar; do
